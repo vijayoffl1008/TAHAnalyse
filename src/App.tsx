@@ -10,6 +10,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Tests from "./pages/Tests";
 import Strategies from "./pages/Strategies";
+import { Indicators } from "./pages/Indicators";
 import Credits from "./pages/Credits";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="tests" element={<Tests />} />
         <Route path="strategies" element={<Strategies />} />
+        <Route path="indicators" element={<Indicators />} />
         <Route path="credits" element={<Credits />} />
       </Route>
       <Route path="*" element={<NotFound />} />

@@ -21,6 +21,7 @@ const navigationItems = [
   { title: "Dashboard", url: "/", icon: BarChart3 },
   { title: "Tests", url: "/tests", icon: Target },
   { title: "Strategies", url: "/strategies", icon: TrendingUp },
+  { title: "Indicators", url: "/indicators", icon: TrendingUp },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
