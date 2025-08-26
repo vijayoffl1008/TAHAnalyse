@@ -16,11 +16,15 @@ import {
 } from "lucide-react";
 import { Strategy } from "@/types/strategy";
 import { EnhancedCreateStrategyDialog } from "@/components/strategy/EnhancedCreateStrategyDialog";
+import { StrategyActions } from "@/components/strategy/StrategyActions";
+import { ViewStrategyDialog } from "@/components/strategy/ViewStrategyDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Strategies() {
   const { user } = useAuth();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
+  const [viewingStrategy, setViewingStrategy] = useState<Strategy | null>(null);
   const [customStrategies, setCustomStrategies] = useState<Strategy[]>([]);
 
   // Mock predefined strategy (only one by default as requested)
@@ -48,8 +52,39 @@ export default function Strategies() {
     setCustomStrategies([...customStrategies, newStrategy]);
   };
 
+  const handleEditStrategy = (strategy: Strategy) => {
+    setEditingStrategy(strategy);
+    setShowCreateDialog(true);
+  };
+
+  const handleUpdateStrategy = (strategyData: Omit<Strategy, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (editingStrategy) {
+      const updatedStrategy: Strategy = {
+        ...strategyData,
+        id: editingStrategy.id,
+        createdAt: editingStrategy.createdAt,
+        updatedAt: new Date().toISOString()
+      };
+      
+      setCustomStrategies(prev => prev.map(s => s.id === editingStrategy.id ? updatedStrategy : s));
+      setShowCreateDialog(false);
+      setEditingStrategy(null);
+    }
+  };
+
   const handleDeleteStrategy = (id: string) => {
     setCustomStrategies(customStrategies.filter(strategy => strategy.id !== id));
+  };
+
+  const handleViewStrategy = (strategy: Strategy) => {
+    setViewingStrategy(strategy);
+  };
+
+  const handleCloseCreateDialog = (open: boolean) => {
+    setShowCreateDialog(open);
+    if (!open) {
+      setEditingStrategy(null);
+    }
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -189,7 +224,12 @@ export default function Strategies() {
                       <p className="text-sm text-muted-foreground mt-1">{strategy.description}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleEditStrategy(strategy)}
+                        className="gap-2"
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
@@ -242,7 +282,12 @@ export default function Strategies() {
                   </div>
 
                   <div className="flex gap-2 pt-2 border-t">
-                    <Button variant="outline" size="sm" className="gap-2 flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewStrategy(strategy)}
+                      className="gap-2 flex-1"
+                    >
                       <Eye className="w-4 h-4" />
                       View Details
                     </Button>
@@ -275,8 +320,20 @@ export default function Strategies() {
       {/* Create Strategy Dialog */}
       <EnhancedCreateStrategyDialog
         open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onCreateStrategy={handleCreateStrategy}
+        onOpenChange={handleCloseCreateDialog}
+        onCreateStrategy={editingStrategy ? handleUpdateStrategy : handleCreateStrategy}
+        editingStrategy={editingStrategy}
+      />
+
+      {/* View Strategy Dialog */}
+      <ViewStrategyDialog
+        open={viewingStrategy !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewingStrategy(null);
+          }
+        }}
+        strategy={viewingStrategy}
       />
     </div>
   );

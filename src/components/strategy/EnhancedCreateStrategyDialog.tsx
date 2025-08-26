@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
-import { Strategy, StrategyType, IndicatorConfig, ConditionGroup, ExitCondition, ReentrySettings, SpecialScenario } from '@/types/strategy';
+import { Strategy, StrategyType, IndicatorConfig, ConditionGroup, ExitCondition, ReentrySettings, SpecialScenario, ConditionOperator } from '@/types/strategy';
 import { StrategyConfigStep } from './StrategyConfigStep';
 import { IndicatorSelectionStep } from './IndicatorSelectionStep';
 import { EnhancedConditionsBuilder } from './EnhancedConditionsBuilder';
-import { ExitConditionsBuilder } from './ExitConditionsBuilder';
+import { EnhancedExitConditionsBuilder } from './EnhancedExitConditionsBuilder';
 import { ReentrySettingsBuilder } from './ReentrySettingsBuilder';
 import { SpecialScenariosBuilder } from './SpecialScenariosBuilder';
 import { StrategySummary } from './StrategySummary';
@@ -17,16 +18,18 @@ interface EnhancedCreateStrategyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateStrategy: (strategy: Omit<Strategy, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  editingStrategy?: Strategy | null;
 }
 
-export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrategy }: EnhancedCreateStrategyDialogProps) {
+export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrategy, editingStrategy }: EnhancedCreateStrategyDialogProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [strategyConfig, setStrategyConfig] = useState({
     name: '',
     description: '',
     type: 'trend_following' as StrategyType,
     duration: 'intraday' as 'intraday' | 'positional',
-    direction: 'both' as 'buy' | 'sell' | 'both'
+    direction: 'both' as 'buy' | 'sell' | 'both',
+    timeframe: '5m'
   });
   const [indicators, setIndicators] = useState<IndicatorConfig[]>([]);
   const [entryConditions, setEntryConditions] = useState<{
@@ -51,6 +54,29 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
     conditions: []
   });
   const [specialScenarios, setSpecialScenarios] = useState<SpecialScenario[]>([]);
+
+  // Effect to populate form when editing
+  useEffect(() => {
+    if (!open) {
+      resetForm();
+    } else if (editingStrategy) {
+      // Populate form with existing strategy data
+      setStrategyConfig({
+        name: editingStrategy.name,
+        description: editingStrategy.description,
+        type: editingStrategy.type,
+        duration: editingStrategy.duration,
+        direction: editingStrategy.direction,
+        timeframe: editingStrategy.timeframe || '5m'
+      });
+      setIndicators(editingStrategy.indicators);
+      setEntryConditions(editingStrategy.entryConditions);
+      setExitConditions(editingStrategy.exitConditions);
+      setReentrySettings(editingStrategy.reentrySettings);
+      setSpecialScenarios(editingStrategy.specialScenarios);
+      setCurrentStep(1);
+    }
+  }, [open, editingStrategy]);
 
   const steps = [
     { number: 1, title: 'Strategy Configuration', description: 'Basic settings and type' },
@@ -99,7 +125,8 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
       description: '',
       type: 'trend_following',
       duration: 'intraday',
-      direction: 'both'
+      direction: 'both',
+      timeframe: '5m'
     });
     setIndicators([]);
     setEntryConditions({
@@ -117,6 +144,18 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
       conditions: []
     });
     setSpecialScenarios([]);
+  };
+
+  const reverseOperator = (operator: ConditionOperator): ConditionOperator => {
+    const operatorMap: Record<ConditionOperator, ConditionOperator> = {
+      'greater_than': 'less_than',
+      'less_than': 'greater_than',
+      'equal': 'equal',
+      'crosses_above': 'crosses_below',
+      'crosses_below': 'crosses_above',
+      'between': 'between'
+    };
+    return operatorMap[operator] || operator;
   };
 
   const isStepValid = (step: number): boolean => {
@@ -164,6 +203,23 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
               <p className="text-sm text-muted-foreground">Define when to enter buy and sell positions</p>
             </div>
             
+            {strategyConfig.direction === 'both' && (
+              <div className="mb-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={entryConditions.reverseSellFromBuy}
+                    onChange={(e) => setEntryConditions(prev => ({ ...prev, reverseSellFromBuy: e.target.checked }))}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">Auto-reverse buy conditions for sell entry</span>
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  When enabled, sell conditions will be automatically generated as the reverse of buy conditions
+                </p>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <EnhancedConditionsBuilder
                 conditionGroups={entryConditions.buy}
@@ -172,27 +228,68 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
                 title="Buy Entry Conditions"
               />
               
-              <EnhancedConditionsBuilder
-                conditionGroups={entryConditions.sell}
-                indicators={indicators}
-                onConditionsChange={(groups) => setEntryConditions(prev => ({ ...prev, sell: groups }))}
-                title="Sell Entry Conditions"
-              />
+              {(strategyConfig.direction === 'sell' || strategyConfig.direction === 'both') && !entryConditions.reverseSellFromBuy && (
+                <EnhancedConditionsBuilder
+                  conditionGroups={entryConditions.sell}
+                  indicators={indicators}
+                  onConditionsChange={(groups) => setEntryConditions(prev => ({ ...prev, sell: groups }))}
+                  title="Sell Entry Conditions"
+                />
+              )}
+              
+              {entryConditions.reverseSellFromBuy && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Sell Entry Conditions</h4>
+                    <Badge variant="secondary" className="text-xs">Auto-Reversed + Custom</Badge>
+                  </div>
+                  
+                  {entryConditions.buy.length > 0 && (
+                    <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm font-medium">Auto-Generated from Buy Conditions</Label>
+                        <Badge variant="outline" className="text-xs">Read Only</Badge>
+                      </div>
+                      <EnhancedConditionsBuilder
+                        conditionGroups={entryConditions.buy.map(group => ({
+                          ...group,
+                          id: `reversed_${group.id}`,
+                          conditions: group.conditions.map(condition => ({
+                            ...condition,
+                            id: `reversed_${condition.id}`,
+                            operator: reverseOperator(condition.operator)
+                          }))
+                        }))}
+                        indicators={indicators}
+                        onConditionsChange={() => {}} // Read-only for auto-generated
+                        title=""
+                        readonly={true}
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Additional Sell Conditions (Optional)</Label>
+                    <EnhancedConditionsBuilder
+                      conditionGroups={entryConditions.sell}
+                      indicators={indicators}
+                      onConditionsChange={(groups) => setEntryConditions(prev => ({ ...prev, sell: groups }))}
+                      title="Extra Sell Conditions"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
       case 4:
         return (
-          <ExitConditionsBuilder
-            exitConditions={[...exitConditions.buy, ...exitConditions.sell]}
-            onExitConditionsChange={(conditions: ExitCondition[]) => {
-              // Split conditions back into buy/sell based on strategy direction
-              const buyConditions = conditions.filter((_, index) => index < conditions.length / 2);
-              const sellConditions = conditions.filter((_, index) => index >= conditions.length / 2);
-              setExitConditions({ buy: buyConditions, sell: sellConditions });
-            }}
+          <EnhancedExitConditionsBuilder
+            exitConditions={exitConditions}
+            onExitConditionsChange={setExitConditions}
             indicators={indicators}
-            title="Exit Conditions"
+            entryConditions={entryConditions}
+            strategyDirection={strategyConfig.direction}
           />
         );
       case 5:
@@ -233,7 +330,9 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader className="pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold">Enhanced Strategy Builder</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">
+            {editingStrategy ? 'Edit Strategy' : 'Enhanced Strategy Builder'}
+          </DialogTitle>
           <div className="space-y-4">
             <Progress value={progress} className="w-full" />
             <div className="flex justify-between items-center">
@@ -291,7 +390,7 @@ export function EnhancedCreateStrategyDialog({ open, onOpenChange, onCreateStrat
             {currentStep === steps.length ? (
               <Button onClick={handleCreateStrategy} className="gap-2">
                 <CheckCircle className="w-4 h-4" />
-                Create Strategy
+                {editingStrategy ? 'Update Strategy' : 'Create Strategy'}
               </Button>
             ) : (
               <Button

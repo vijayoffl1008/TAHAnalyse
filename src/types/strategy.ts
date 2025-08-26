@@ -48,16 +48,18 @@ export interface ExitCondition {
   value?: number;
   percentage?: number;
   conditions?: Condition[];
+  extraConditions?: Condition[];
+  priority: number;
   sarSettings?: {
     useOnlySL: boolean;
-    priority: 'first' | 'last';
+    priority: number;
   };
 }
 
 export interface ReentrySettings {
   type: ReentryType;
   maxReentries?: number;
-  conditions?: Condition[];
+  conditions?: ConditionGroup[];
   specialScenarios?: SpecialScenario[];
 }
 
@@ -80,6 +82,7 @@ export interface Strategy {
   type: StrategyType;
   duration: StrategyDuration;
   direction: StrategyDirection;
+  timeframe?: string;
   indicators: IndicatorConfig[];
   entryConditions: {
     buy: ConditionGroup[];

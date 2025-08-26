@@ -32,11 +32,22 @@ export function IndicatorSelectionStep({ indicators, onIndicatorsChange }: Indic
   );
 
   const addIndicator = (indicatorType: IndicatorType) => {
+    const definition = getAllIndicatorDefinition(indicatorType);
+    if (!definition) return;
+
+    // Generate unique ID to allow multiple instances of same indicator
+    const existingCount = indicators.filter(ind => ind.type === indicatorType).length;
     const newIndicator: IndicatorConfig = {
-      id: `indicator_${Date.now()}`,
+      id: `${indicatorType}_${existingCount + 1}_${Date.now()}`,
       type: indicatorType,
       parameters: {}
     };
+
+    // Set default parameters
+    definition.parameters.forEach(param => {
+      newIndicator.parameters[param.name] = param.defaultValue;
+    });
+
     onIndicatorsChange([...indicators, newIndicator]);
     setShowAddIndicator(false);
   };
@@ -138,9 +149,11 @@ export function IndicatorSelectionStep({ indicators, onIndicatorsChange }: Indic
                       size="sm"
                       onClick={() => addIndicator(indicator.type)}
                       className="w-full"
-                      disabled={indicators.some(ind => ind.type === indicator.type)}
                     >
-                      {indicators.some(ind => ind.type === indicator.type) ? 'Already Added' : 'Add Indicator'}
+                      Add Indicator
+                      {indicators.filter(ind => ind.type === indicator.type).length > 0 && 
+                        ` (${indicators.filter(ind => ind.type === indicator.type).length})`
+                      }
                     </Button>
                   </CardContent>
                 </Card>

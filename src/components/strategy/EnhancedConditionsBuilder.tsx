@@ -13,6 +13,7 @@ interface EnhancedConditionsBuilderProps {
   indicators: IndicatorConfig[];
   onConditionsChange: (groups: ConditionGroup[]) => void;
   title: string;
+  readonly?: boolean;
 }
 
 const operatorOptions: { value: ConditionOperator; label: string }[] = [
@@ -41,7 +42,8 @@ export function EnhancedConditionsBuilder({
   conditionGroups,
   indicators,
   onConditionsChange,
-  title
+  title,
+  readonly = false
 }: EnhancedConditionsBuilderProps) {
   
   const addConditionGroup = () => {
@@ -220,10 +222,12 @@ export function EnhancedConditionsBuilder({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{title}</CardTitle>
-          <Button onClick={addConditionGroup} size="sm" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Condition Group
-          </Button>
+          {!readonly && (
+            <Button onClick={addConditionGroup} size="sm" className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Condition Group
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -263,23 +267,27 @@ export function EnhancedConditionsBuilder({
                       )}
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addConditionToGroup(group.id)}
-                        className="gap-2"
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add Condition
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteConditionGroup(group.id)}
-                        className="text-destructive hover:text-destructive gap-2"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                      {!readonly && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addConditionToGroup(group.id)}
+                            className="gap-2"
+                          >
+                            <Plus className="w-3 h-3" />
+                            Add Condition
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteConditionGroup(group.id)}
+                            className="text-destructive hover:text-destructive gap-2"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardHeader>

@@ -5,6 +5,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StrategyType } from '@/types/strategy';
 
+const timeframes = [
+  { label: '1 minute', value: '1m' },
+  { label: '2 minutes', value: '2m' },
+  { label: '3 minutes', value: '3m' },
+  { label: '5 minutes', value: '5m' },
+  { label: '10 minutes', value: '10m' },
+  { label: '15 minutes', value: '15m' },
+  { label: '30 minutes', value: '30m' },
+  { label: '1 hour', value: '1h' },
+  { label: '2 hours', value: '2h' },
+  { label: '4 hours', value: '4h' },
+  { label: '1 day', value: '1d' },
+  { label: '1 week', value: '1w' }
+];
+
 interface StrategyConfigStepProps {
   config: {
     name: string;
@@ -12,6 +27,7 @@ interface StrategyConfigStepProps {
     type: StrategyType;
     duration: 'intraday' | 'positional';
     direction: 'buy' | 'sell' | 'both';
+    timeframe: string;
   };
   onConfigChange: (config: {
     name: string;
@@ -19,6 +35,7 @@ interface StrategyConfigStepProps {
     type: StrategyType;
     duration: 'intraday' | 'positional';
     direction: 'buy' | 'sell' | 'both';
+    timeframe: string;
   }) => void;
 }
 
@@ -62,7 +79,7 @@ export function StrategyConfigStep({ config, onConfigChange }: StrategyConfigSte
           <CardTitle>Strategy Configuration</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Duration</Label>
               <Select value={config.duration} onValueChange={(value) => updateConfig('duration', value)}>
@@ -86,6 +103,22 @@ export function StrategyConfigStep({ config, onConfigChange }: StrategyConfigSte
                   <SelectItem value="buy">Buy Only</SelectItem>
                   <SelectItem value="sell">Sell Only</SelectItem>
                   <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Timeframe</Label>
+              <Select value={config.timeframe} onValueChange={(value) => updateConfig('timeframe', value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeframes.map((tf) => (
+                    <SelectItem key={tf.value} value={tf.value}>
+                      {tf.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
