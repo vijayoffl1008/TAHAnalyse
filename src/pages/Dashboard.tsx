@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Target, 
   TrendingUp, 
@@ -12,6 +13,8 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  
   // Mock data
   const stats = {
     totalTests: 247,
@@ -31,7 +34,7 @@ export default function Dashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's your trading performance overview.</p>
+          <p className="text-muted-foreground">Welcome back, {user?.name}! Here's your trading performance overview.</p>
         </div>
         <Button className="gap-2">
           <Target className="w-4 h-4" />
