@@ -37,12 +37,12 @@ export function AppSidebar() {
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
     isActive 
-      ? "bg-primary text-primary-foreground font-medium hover:bg-primary-hover" 
+      ? "bg-primary text-[hsl(var(--sidebar-foreground))] font-medium hover:bg-primary-hover" 
       : "hover:bg-muted text-muted-foreground hover:text-foreground";
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"}>
-      <SidebarContent className="bg-card border-r">
+      <SidebarContent className="bg-sidebar border-sidebar-border text-[hsl(var(--sidebar-foreground))]">
         <div className="p-6 border-b">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -50,7 +50,7 @@ export function AppSidebar() {
             </div>
             {!collapsed && (
               <div>
-                <h2 className="text-lg font-bold text-foreground">StockAnalyzer</h2>
+                <h2 className="text-lg font-bold text-sidebar-foreground">TAH Analyzer</h2>
                 <p className="text-xs text-muted-foreground">Pro Analytics</p>
               </div>
             )}
@@ -58,9 +58,9 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground font-medium">
+          {/* <SidebarGroupLabel className="text-muted-foreground font-medium">
             Navigation
-          </SidebarGroupLabel>
+          </SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
