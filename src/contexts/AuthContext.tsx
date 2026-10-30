@@ -1,13 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type UserRole = 'admin' | 'user';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-}
+import { loginAPI } from "../services/api/internal/auth.api";
+import { getAPIError } from "../services/api/apiError";
+import { setAccessToken } from "../lib/token";
+import { User } from "../types/user";
 
 interface AuthContextType {
   user: User | null;
@@ -18,31 +14,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users data - In production, this would come from your backend
-const mockUsers: Array<User & { password: string }> = [
-  {
-    id: '1',
-    email: 'admin@tahanalyzer.com',
-    password: 'admin123',
-    name: 'Admin User',
-    role: 'admin'
-  },
-  {
-    id: '2',
-    email: 'user@tahanalyzer.com',
-    password: 'user123',
-    name: 'John Doe',
-    role: 'user'
-  },
-  {
-    id: '3',
-    email: 'trader@example.com',
-    password: 'trader123',
-    name: 'Jane Smith',
-    role: 'user'
-  }
-];
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -65,18 +36,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('tahanalyzer_user', JSON.stringify(userWithoutPassword));
-      setIsLoading(false);
-      return true;
+
+    try {
+      const res = await loginAPI({
+        username: email,
+        password,
+      });
+      if (res.user) {
+        const { ...userWithoutPassword } = res.user;
+        setAccessToken(res.token);
+        setUser(userWithoutPassword);
+        localStorage.setItem('tahanalyzer_user', JSON.stringify(userWithoutPassword));
+        setIsLoading(false);
+        return true;
+      }
+    } catch (err) {
+      alert(getAPIError(err));
     }
     
     setIsLoading(false);
