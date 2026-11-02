@@ -267,39 +267,7 @@ export function CreateCustomIndicatorDialog({
               <CardTitle>Parameters</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Parameter Name</Label>
-                  <Input 
-                    placeholder="e.g., period, multiplier, threshold"
-                    id="paramName"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Default Value</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="e.g., 14, 2.0, 0.7"
-                      id="paramValue"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => {
-                        const nameEl = document.getElementById('paramName') as HTMLInputElement;
-                        const valueEl = document.getElementById('paramValue') as HTMLInputElement;
-                        if (nameEl?.value && valueEl?.value) {
-                          addParameter(nameEl.value, parseFloat(valueEl.value) || valueEl.value);
-                          nameEl.value = '';
-                          valueEl.value = '';
-                        }
-                      }}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              <ParameterAdder onAdd={addParameter} />
 
               {/* Current Parameters */}
               {Object.keys(parameters).length > 0 && (
@@ -344,5 +312,33 @@ export function CreateCustomIndicatorDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Replaces the document.getElementById anti-pattern with controlled React state. */
+function ParameterAdder({ onAdd }: { onAdd: (key: string, value: string | number) => void }) {
+  const [paramName, setParamName] = useState('');
+  const [paramValue, setParamValue] = useState('');
+  const handleAdd = () => {
+    if (paramName.trim() && paramValue.trim()) {
+      onAdd(paramName.trim(), parseFloat(paramValue) || paramValue);
+      setParamName('');
+      setParamValue('');
+    }
+  };
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label>Parameter Name</Label>
+        <Input placeholder="e.g., period, multiplier" value={paramName} onChange={(e) => setParamName(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label>Default Value</Label>
+        <div className="flex gap-2">
+          <Input placeholder="e.g., 14, 2.0" value={paramValue} onChange={(e) => setParamValue(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()} />
+          <Button type="button" size="sm" onClick={handleAdd}><Plus className="w-4 h-4" /></Button>
+        </div>
+      </div>
+    </div>
   );
 }

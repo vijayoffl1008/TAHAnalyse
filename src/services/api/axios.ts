@@ -1,11 +1,6 @@
-import axios from "axios";
-
-const baseURL = import.meta.env.VITE_API_BASE_URL;
-
-export const api = axios.create({
-  baseURL,
-  timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+/**
+ * Backward-compatibility shim.
+ * All new code should import directly from `./clients`.
+ * This file exists so existing imports of `api` from `./axios` continue to work.
+ */
+export { faqApi as api } from "./clients";

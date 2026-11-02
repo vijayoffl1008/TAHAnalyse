@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { Strategy } from "@/types/strategy";
 import { EnhancedCreateStrategyDialog } from "@/components/strategy/EnhancedCreateStrategyDialog";
-import { StrategyActions } from "@/components/strategy/StrategyActions";
 import { ViewStrategyDialog } from "@/components/strategy/ViewStrategyDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
